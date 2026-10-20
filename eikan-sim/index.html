@@ -1,0 +1,256 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="theme-color" content="#10251f">
+    <meta name="description" content="選手育成と年度進行を中心にしたオリジナル高校野球シミュレーター">
+    <title>球春 - 高校野球育成シミュレーター</title>
+    <link rel="stylesheet" href="app.css">
+  </head>
+  <body>
+    <main class="app">
+      <header class="topbar">
+        <a class="brand" href="#" aria-label="球春 ホーム">
+          <span class="brand-mark">球</span>
+          <span><strong>球春</strong><small>HIGH SCHOOL BASEBALL MANAGER</small></span>
+        </a>
+        <div class="top-actions">
+          <button id="new-save" class="button button-quiet" type="button">新規スタート</button>
+          <button id="import-save" class="button button-quiet" type="button">JSON読込</button>
+          <button id="restore-backup" class="button button-quiet" type="button">バックアップ復元</button>
+          <button id="export-save" class="button button-quiet" type="button">JSON保存</button>
+          <button id="export-csv" class="button button-quiet" type="button">選手CSV</button>
+          <input id="import-file" type="file" accept="application/json,.json" hidden>
+        </div>
+      </header>
+
+      <div id="notice" class="notice" role="status" aria-live="polite" hidden></div>
+
+      <nav class="tabs" aria-label="メインメニュー">
+        <button class="tab active" type="button" data-view="dashboard">運営</button>
+        <button class="tab" type="button" data-view="roster">選手</button>
+        <button class="tab" type="button" data-view="scouting">スカウト</button>
+        <button class="tab" type="button" data-view="history">戦績・歴史</button>
+      </nav>
+
+      <section id="dashboard" class="view">
+        <section class="hero panel">
+          <div class="hero-main">
+            <p class="eyebrow">ACADEMIC YEAR <span id="academic-year">2026</span></p>
+            <h1 id="school-name">青葉高校</h1>
+            <p class="hero-subtitle"><span id="current-date">2026年4月1日</span> <span class="dot"></span> <span id="day-number">創部1年目</span></p>
+          </div>
+          <div class="record">
+            <span class="record-label">今シーズン</span>
+            <strong><span id="season-wins">0</span><i>勝</i> <span id="season-losses">0</span><i>敗</i> <span id="season-ties">0</span><i>分</i></strong>
+            <small>通算 <span id="career-record">0勝 0敗 0分</span></small>
+          </div>
+        </section>
+
+        <div class="dashboard-grid">
+          <section class="management panel">
+            <div class="section-heading">
+              <div><p class="eyebrow">TEAM MANAGEMENT</p><h2>今日の運営</h2></div>
+              <span id="active-player-count" class="pill">27名</span>
+            </div>
+            <div class="training-row">
+              <label for="training-plan">チーム練習方針 <span class="model-badge">独自推定モデル</span></label>
+              <select id="training-plan"></select>
+              <p id="training-description" class="muted"></p>
+            </div>
+            <div class="advance-grid">
+              <button id="advance-day" class="button button-primary" type="button">1日進める <span>→</span></button>
+              <button id="advance-game" class="button button-secondary" type="button">次の試合まで進める <span>→</span></button>
+              <button id="advance-month" class="button button-secondary" type="button">1か月進める <span>→</span></button>
+              <button id="advance-year" class="button button-secondary" type="button">1年度進める <span>→</span></button>
+            </div>
+            <p class="action-note">日付を進めると全員が練習します。試合日は自動で試合を行い、成績を記録します。</p>
+          </section>
+
+          <section class="next-game panel">
+            <div class="section-heading">
+              <div><p class="eyebrow">NEXT FIXTURE</p><h2>次の予定</h2></div>
+              <span class="pill pill-soft">自動試合</span>
+            </div>
+            <div id="next-fixture" class="fixture-empty">予定を確認しています...</div>
+            <div class="progress-track"><span id="season-progress"></span></div>
+            <p id="schedule-count" class="muted"></p>
+          </section>
+
+          <section class="roster-preview panel">
+            <div class="section-heading">
+              <div><p class="eyebrow">TEAM ROSTER</p><h2>チームの主力</h2></div>
+              <button class="text-button" type="button" data-open-view="roster">選手一覧 →</button>
+            </div>
+            <div class="table-scroll">
+              <table>
+                <thead><tr><th>選手</th><th>学年・守備</th><th>打</th><th>パ</th><th>弾道</th><th>走</th><th>投球</th></tr></thead>
+                <tbody id="preview-players"></tbody>
+              </table>
+            </div>
+          </section>
+
+          <section class="lineup-panel panel">
+            <div class="section-heading">
+              <div><p class="eyebrow">STARTING LINEUP</p><h2>スターティングメンバー</h2></div>
+              <span class="model-badge">9人・打順を設定</span>
+            </div>
+            <p class="muted section-note">選手名を選んで入れ替え、矢印で打順を調整します。投手・捕手・内野4人・外野3人が必要です。</p>
+            <div id="lineup-editor" class="lineup-editor"></div>
+          </section>
+
+          <section class="news-panel panel">
+            <div class="section-heading">
+              <div><p class="eyebrow">TEAM JOURNAL</p><h2>部の記録</h2></div>
+              <span id="notice-count" class="muted"></span>
+            </div>
+            <ol id="notice-list" class="notice-list"></ol>
+          </section>
+
+          <section class="growth-panel panel">
+            <div class="section-heading">
+              <div><p class="eyebrow">PLAYER DEVELOPMENT</p><h2>能力アップ記録</h2></div>
+              <span id="growth-count" class="muted"></span>
+            </div>
+            <ol id="growth-list" class="growth-list"></ol>
+          </section>
+        </div>
+      </section>
+
+      <section id="roster" class="view" hidden>
+        <div class="page-heading">
+          <div><p class="eyebrow">PLAYER DEVELOPMENT</p><h1>選手一覧</h1><p class="muted">能力値はこのシミュレーター独自の推定値（通常能力0〜100、弾道1〜4）です。</p></div>
+          <span id="roster-total" class="pill"></span>
+        </div>
+        <div class="roster-layout">
+          <section class="panel table-panel">
+            <div class="roster-toolbar">
+              <label>選手区分
+                <select id="roster-category">
+                  <option value="field">野手</option>
+                  <option value="pitcher">投手</option>
+                </select>
+              </label>
+              <label>並び順
+                <select id="roster-sort">
+                  <option value="grade">学年順（3年→1年）</option>
+                  <option value="position">ポジション順</option>
+                </select>
+              </label>
+            </div>
+            <div class="table-scroll">
+              <table>
+                <thead><tr id="roster-head"></tr></thead>
+                <tbody id="roster-players"></tbody>
+              </table>
+            </div>
+          </section>
+          <aside id="player-detail" class="player-detail panel">
+            <p class="eyebrow">PLAYER PROFILE</p>
+            <h2>選手を選択</h2>
+            <p class="muted">一覧から選手を選ぶと、能力と成長記録を表示します。</p>
+          </aside>
+        </div>
+      </section>
+
+      <section id="scouting" class="view" hidden>
+        <div class="page-heading">
+          <div><p class="eyebrow">PLAYER RECRUITING</p><h1>全国スカウト</h1><p class="muted">各年度に都道府県ごとの特色と候補8人を生成します。同じ年度中は候補が固定されます。</p></div>
+          <span class="pill">所持アイテム <strong id="scout-item-count">0</strong>個</span>
+        </div>
+        <div class="scouting-grid">
+          <section class="panel scouting-panel">
+            <div class="section-heading">
+              <div><p class="eyebrow">SCOUTING TRIPS</p><h2>都道府県を選ぶ</h2></div>
+              <span id="scout-committed-count" class="pill pill-soft">0 / 8人</span>
+            </div>
+            <label class="scout-label" for="scout-prefecture">訪問先</label>
+            <select id="scout-prefecture"></select>
+            <h3 id="scout-region-type" class="region-type"></h3>
+            <p id="scout-region-description" class="muted"></p>
+            <p class="muted">候補公開・再訪ごとにアイテムを1個消費します。公開後は候補から1人を選んで判定するか、スキップできます。成功率は1回目75%、2回目95%、3回目100%。スカウト入学は最大8人です。</p>
+            <div class="scout-visit-actions">
+              <button id="scout-visit" class="button button-primary" type="button">アイテムを使って候補を見る</button>
+              <button id="scout-skip" class="button button-secondary" type="button" hidden>訪問をスキップ</button>
+            </div>
+            <form id="scout-code-form" class="scout-code-form">
+              <h3>アイテム追加</h3>
+              <label for="scout-code">パスコード</label>
+              <input id="scout-code" type="password" autocomplete="off" required>
+              <label for="scout-code-amount">追加個数</label>
+              <input id="scout-code-amount" type="number" min="1" max="1000000" step="1" value="10" required>
+              <button class="button button-secondary" type="submit">コードを使って追加</button>
+            </form>
+          </section>
+          <section class="panel scouting-panel">
+            <div class="section-heading"><div><p class="eyebrow">PROSPECTS</p><h2>候補選手 8人</h2><p class="muted">候補を見るには訪問アイテムが必要です。</p></div></div>
+            <div class="table-scroll">
+              <table class="prospect-table">
+                <thead><tr><th>選手</th><th>守備</th><th>能力</th><th>弾道 / 総変化量</th><th>状況</th><th>行動</th></tr></thead>
+                <tbody id="scout-prospects"></tbody>
+              </table>
+            </div>
+          </section>
+          <section class="panel scouting-panel scouted-prospects-panel">
+            <div class="section-heading">
+              <div><p class="eyebrow">COMMITTED RECRUITS</p><h2>スカウト済み候補生</h2><p class="muted">次年度に入学予定の選手一覧です。</p></div>
+              <span id="scouted-prospect-count" class="pill pill-soft">0 / 8人</span>
+            </div>
+            <div class="table-scroll">
+              <table class="prospect-table">
+                <thead><tr><th>選手</th><th>出身</th><th>守備</th><th>能力</th><th>弾道 / 総変化量</th><th>入学予定</th></tr></thead>
+                <tbody id="scouted-prospects"></tbody>
+              </table>
+            </div>
+          </section>
+        </div>
+      </section>
+
+      <section id="history" class="view" hidden>
+        <div class="page-heading">
+          <div><p class="eyebrow">SEASON RECORDS</p><h1>戦績・歴史</h1><p class="muted">試合記録、年度成績、卒業生の履歴を保存します。</p></div>
+        </div>
+        <div class="history-grid">
+          <section class="panel history-panel">
+            <div class="section-heading"><div><p class="eyebrow">GAME LOG</p><h2>試合結果</h2></div><span id="game-count" class="muted"></span></div>
+            <div id="game-list" class="game-list"></div>
+          </section>
+          <section class="panel history-panel">
+            <div class="section-heading"><div><p class="eyebrow">SCHOOL YEARS</p><h2>年度記録</h2></div></div>
+            <div id="season-list" class="compact-list"></div>
+          </section>
+          <section class="panel history-panel">
+            <div class="section-heading"><div><p class="eyebrow">ALUMNI</p><h2>卒業生</h2></div><span id="alumni-count" class="muted"></span></div>
+            <div id="alumni-list" class="compact-list"></div>
+          </section>
+          <section id="game-detail" class="panel game-detail">
+            <p class="eyebrow">BOX SCORE</p>
+            <h2>試合を選択</h2>
+            <p class="muted">試合結果からイニング別スコアと個人成績を確認できます。</p>
+          </section>
+        </div>
+      </section>
+
+      <footer>
+        <span>原作の公式仕様と独自の推定モデルを区別しています。</span>
+        <a href="DESIGN.md">仕様・モデル・開発計画</a>
+      </footer>
+    </main>
+    <dialog id="new-save-dialog">
+      <form method="dialog" id="new-save-form">
+        <p class="eyebrow">NEW SIMULATION</p>
+        <h2>新しい高校生活を始める</h2>
+        <label for="new-school-name">学校名</label>
+        <input id="new-school-name" value="青葉高校" maxlength="30" required>
+        <label for="new-seed">乱数シード <span class="muted">同じ値で同じ初期選手を再現</span></label>
+        <input id="new-seed" type="number" min="0" max="4294967295" value="2026" required>
+        <div class="dialog-actions">
+          <button class="button button-secondary" value="cancel">キャンセル</button>
+          <button id="confirm-new-save" class="button button-primary" value="confirm">新規開始</button>
+        </div>
+      </form>
+    </dialog>
+    <script type="module" src="src/app.js?v=9"></script>
+  </body>
+</html>
